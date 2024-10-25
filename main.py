@@ -80,9 +80,6 @@ class ModInstallerApp:
         self.install_button = tk.Button(self.root, text="Install Selected Mods", command=self.install_mods)
         self.install_button.pack(pady=10)
 
-        self.update_button = tk.Button(self.root, text="Update All Mods", command=self.update_all_mods)
-        self.update_button.pack(pady=5)
-
         self.progress_label = tk.Label(self.root, text=" ", font=("Arial", 10))
         self.progress_label.pack(pady=5)
 
@@ -191,21 +188,6 @@ class ModInstallerApp:
         messagebox.showinfo("Success", "Selected mods and splits installed successfully.")
         
         self.root.after(1000, lambda: self.progress_label.config(text=""))
-
-    def update_all_mods(self):
-        root_path = self.path_entry.get()
-        plugins_path = os.path.join(root_path, "BepInEx", "plugins")
-        if not os.path.isdir(plugins_path):
-            messagebox.showerror("Error", "BepInEx is installed, but the 'plugins' folder is missing. Please run V.A Proxy once to initialize the folder.")
-            return
-        self.save_plugins_path(root_path)
-
-        for mod_name in self.check_vars.keys():
-            mod_url = self.get_mod_url(mod_name)
-            if mod_url:
-                self.download_and_install_mod(mod_url, plugins_path)
-
-        messagebox.showinfo("Success", "All mods updated successfully.")
 
     def get_installed_mods(self):
         root_path = self.path_entry.get()
