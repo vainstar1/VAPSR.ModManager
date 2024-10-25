@@ -3,7 +3,7 @@ from tkinter import filedialog, messagebox
 import os
 import requests
 import json
-import rarfile
+import zipfile
 import base64
 
 class ModInstallerApp:
@@ -130,19 +130,39 @@ class ModInstallerApp:
         if not os.path.isdir(root_path):
             messagebox.showerror("Error", "Invalid V.A Proxy root folder path.")
             return
+
         bepinex_path = os.path.join(root_path, "BepInEx")
+
         if os.path.exists(bepinex_path):
-            if not os.path.exists(os.path.join(bepinex_path, "plugins")):
-                messagebox.showerror("BepInEx Initialization", "BepInEx is installed, but the 'plugins' folder is missing. Please run V.A Proxy once to initialize the folder.")
-            else:
+            if os.path.exists(os.path.join(bepinex_path, "plugins")):
                 messagebox.showinfo("BepInEx Installation", "BepInEx is already installed and initialized!")
-        else:
-            try:
-                with rarfile.RarFile("BepInExPack.rar") as rar_ref:
-                    rar_ref.extractall(root_path)
+                return
+            else:
+                messagebox.showerror("BepInEx Initialization", "BepInEx is installed, but the 'plugins' folder is missing. Please run V.A Proxy once to initialize the folder.")
+                return
+
+        try:
+            with zipfile.ZipFile("BepInExPack.zip", 'r') as zip_ref:
+                for item in zip_ref.namelist():
+                    if item.startswith("BepInExPack/"):
+                        target_item = item[len("BepInExPack/"):]  
+                        destination_path = os.path.join(root_path, target_item)
+
+                        if item.endswith('/'):
+                            os.makedirs(destination_path, exist_ok=True)
+                        else:
+                            with open(destination_path, 'wb') as f:
+                                f.write(zip_ref.read(item))
+
+            if os.path.exists(bepinex_path) and os.path.isdir(os.path.join(bepinex_path, "config")):
                 messagebox.showinfo("BepInEx Installation", "BepInEx successfully installed! Run V.A Proxy to initialize your Plugins folder.")
-            except rarfile.Error as e:
-                messagebox.showerror("Error", f"Failed to extract BepInExPack.rar: {e}")
+            else:
+                messagebox.showerror("Error", "BepInEx installation failed. Please check the contents of BepInExPack.zip.")
+
+        except zipfile.BadZipFile as e:
+            messagebox.showerror("Error", f"Failed to extract BepInExPack.zip: {e}")
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
 
     def install_mods(self):
         root_path = self.path_entry.get()
